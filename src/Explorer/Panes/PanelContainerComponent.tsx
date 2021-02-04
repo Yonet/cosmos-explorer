@@ -1,9 +1,14 @@
 import * as React from "react";
 import { Panel, PanelType } from "office-ui-fabric-react";
-import { PanelParams } from "./PanelManager";
 
+export interface PanelState {
+  headerText: string;
+  panelContent: JSX.Element;
+}
 export interface PanelContainerProps {
-  panelParams: PanelParams;
+  panelState: PanelState;
+  isOpen: boolean;
+  closePanel: () => void;
   isConsoleExpanded: boolean;
 }
 
@@ -12,14 +17,14 @@ export class PanelContainerComponent extends React.Component<PanelContainerProps
   private readonly consoleContentHeight = 220;
 
   render(): JSX.Element {
-    if (!this.props.panelParams) {
+    if (!this.props.panelState) {
       return <></>;
     }
 
     return (
       <Panel
-        headerText={this.props.panelParams.headerText}
-        isOpen={this.props.panelParams.isOpen}
+        headerText={this.props.panelState.headerText}
+        isOpen={this.props.isOpen}
         onDismiss={this.onDissmiss}
         isLightDismiss
         type={PanelType.custom}
@@ -33,7 +38,7 @@ export class PanelContainerComponent extends React.Component<PanelContainerProps
         }}
         style={{ height: this.getPanelHeight() }}
       >
-        {this.props.panelParams.panelContent}
+        {this.props.panelState.panelContent}
       </Panel>
     );
   }
@@ -42,7 +47,7 @@ export class PanelContainerComponent extends React.Component<PanelContainerProps
     if ((ev.target as HTMLElement).id === "notificationConsoleHeader") {
       ev.preventDefault();
     } else {
-      this.props.panelParams.onPanelClose();
+      this.props.closePanel();
     }
   };
 

@@ -58,6 +58,7 @@ import { initializeIcons } from "office-ui-fabric-react/lib/Icons";
 import { ExplorerParams } from "./Explorer/Explorer";
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
+import { useMethods } from "react-use";
 import copyImage from "../images/Copy.svg";
 import hdeConnectImage from "../images/HdeConnectCosmosDB.svg";
 import refreshImg from "../images/refresh-cosmos.svg";
@@ -65,25 +66,33 @@ import arrowLeftImg from "../images/imgarrowlefticon.svg";
 import { KOCommentEnd, KOCommentIfStart } from "./koComment";
 import { useConfig } from "./hooks/useConfig";
 import { useKnockoutExplorer } from "./hooks/useKnockoutExplorer";
-import { NotificationConsoleComponent } from "./Explorer/Menus/NotificationConsole/NotificationConsoleComponent";
-import { PanelContainerComponent } from "./Explorer/Panes/PanelContainerComponent";
-import { PanelManager } from "./Explorer/Panes/PanelManager";
+import {
+  ConsoleData,
+  NotificationConsoleComponent,
+} from "./Explorer/Menus/NotificationConsole/NotificationConsoleComponent";
+import { PanelState, PanelContainerComponent } from "./Explorer/Panes/PanelContainerComponent";
+import { PanelMethods, createPanelMethods } from "./Explorer/Panes/createPanelMethods";
 
 initializeIcons();
 
 const App: React.FunctionComponent = () => {
-  const [isNotificationConsoleExpanded, setIsNotificationConsoleExpanded] = useState(false);
-  const [notificationConsoleData, setNotificationConsoleData] = useState(undefined);
+  const [isNotificationConsoleExpanded, setIsNotificationConsoleExpanded] = useState<boolean>(false);
+  const [notificationConsoleData, setNotificationConsoleData] = useState<ConsoleData>(undefined);
   //TODO: Refactor so we don't need to pass the id to remove a console data
-  const [inProgressConsoleDataIdToBeDeleted, setInProgressConsoleDataIdToBeDeleted] = useState("");
-  const [panelParams, setPanelParams] = useState(undefined);
-  const panelManager = new PanelManager({ setPanelParams, setIsNotificationConsoleExpanded });
+  const [inProgressConsoleDataIdToBeDeleted, setInProgressConsoleDataIdToBeDeleted] = useState<string>("");
+  const [isPanelOpen, setIsPanelOpen] = useState<boolean>(false);
+  const panelMethods: PanelMethods = createPanelMethods({
+    expandNotificationConsole: () => setIsNotificationConsoleExpanded(true),
+    closePanel: () => setIsPanelOpen(false),
+  });
+  const [panelState, methods] = useMethods<() => PanelMethods, PanelState>(() => panelMethods, undefined);
 
   const explorerParams: ExplorerParams = {
     setIsNotificationConsoleExpanded,
     setNotificationConsoleData,
     setInProgressConsoleDataIdToBeDeleted,
-    panelManager,
+    panelMethods: methods as PanelMethods,
+    setIsPanelOpen,
   };
   const config = useConfig();
   useKnockoutExplorer(config, explorerParams);
@@ -316,7 +325,12 @@ const App: React.FunctionComponent = () => {
         </div>
       </div>
       {/* Global loader - End */}
-      <PanelContainerComponent panelParams={panelParams} isConsoleExpanded={isNotificationConsoleExpanded} />
+      <PanelContainerComponent
+        panelState={panelState}
+        isOpen={isPanelOpen}
+        closePanel={() => setIsPanelOpen(false)}
+        isConsoleExpanded={isNotificationConsoleExpanded}
+      />
       <div data-bind="react:uploadItemsPaneAdapter" />
       <div data-bind='component: { name: "add-database-pane", params: {data: addDatabasePane} }' />
       <div data-bind='component: { name: "add-collection-pane", params: { data: addCollectionPane} }' />
